@@ -106,6 +106,11 @@ default-features = false
 package = 'pallet-timestamp'
 version = '2.0.0-alpha.6'
 
+[dependencies.utility]
+default-features = false
+package = 'pallet-utility'
+version = '2.0.0-alpha.6'
+
 [dependencies.transaction-payment]
 default-features = false
 package = 'pallet-transaction-payment'
@@ -155,4 +160,5 @@ std = [
     'timestamp/std',
     'transaction-payment/std',
     'template/std',
+    'utility/std'
 ]

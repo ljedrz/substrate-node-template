@@ -24,12 +24,14 @@ use grandpa::fg_primitives;
 use sp_version::RuntimeVersion;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
+use utility;
 
 // A few exports that help ease life for downstream crates.
 #[cfg(any(feature = "std", test))]
 pub use sp_runtime::BuildStorage;
 pub use timestamp::Call as TimestampCall;
 pub use balances::Call as BalancesCall;
+pub use utility::Call as UtilityCall;
 pub use sp_runtime::{Permill, Perbill};
 pub use frame_support::{
 	StorageValue, construct_runtime, parameter_types,
@@ -226,6 +228,15 @@ impl template::Trait for Runtime {
 	type Event = Event;
 }
 
+impl utility::Trait for Runtime {
+    type Call = Call;
+    type Event = Event;
+    type Currency = balances::Module<Runtime>;
+    type MultisigDepositBase = ();
+    type MultisigDepositFactor = ();
+    type MaxSignatories = ();
+}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -242,6 +253,7 @@ construct_runtime!(
 		Sudo: sudo::{Module, Call, Config<T>, Storage, Event<T>},
 		// Used for the module template in `./template.rs`
 		TemplateModule: template::{Module, Call, Storage, Event<T>},
+		Utility: utility::{Module, Call, Event<T>, Storage},
 	}
 );
 
