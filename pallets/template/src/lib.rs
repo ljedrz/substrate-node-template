@@ -10,6 +10,7 @@
 /// https://github.com/paritytech/substrate/blob/master/frame/example/src/lib.rs
 
 use frame_support::{decl_module, decl_storage, decl_event, decl_error, dispatch};
+use frame_support::traits::Currency;
 use frame_system::{self as system, ensure_signed};
 
 #[cfg(test)]
@@ -18,12 +19,16 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+type BalanceOf<T> = <<T as Trait>::Currency as Currency<<T as system::Trait>::AccountId>>::Balance;
+
 /// The pallet's configuration trait.
 pub trait Trait: system::Trait {
 	// Add other types and constants required to configure this pallet.
 
 	/// The overarching event type.
 	type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
+
+	type Currency: Currency<Self::AccountId>;
 }
 
 // This pallet's storage items.
@@ -87,6 +92,13 @@ decl_module! {
 			// Here we are raising the Something event
 			Self::deposit_event(RawEvent::SomethingStored(something, who));
 			Ok(())
+		}
+
+		#[weight = frame_support::weights::SimpleDispatchInfo::default()]
+		pub fn issue_monies(origin, amount: BalanceOf<T>) -> dispatch::DispatchResult {
+		    T::Currency::issue(amount);
+
+		    Ok(())
 		}
 
 		/// Another dummy entry point.
