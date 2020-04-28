@@ -223,6 +223,7 @@ impl sudo::Trait for Runtime {
 
 /// Used for the module template in `./template.rs`
 impl template::Trait for Runtime {
+    type Currency = balances::Module<Runtime>;
 	type Event = Event;
 }
 
