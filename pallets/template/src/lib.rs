@@ -116,7 +116,7 @@ decl_module! {
           	let who = ensure_signed(origin)?;
 
           	T::Currency::issue(amount);
-            T::Currency::deposit_into_existing(&who, amount)?;
+            T::Currency::deposit_creating(&who, amount);
 
             Self::deposit_event(RawEvent::FreeMoneyGiven(who, amount));
             Ok(())
