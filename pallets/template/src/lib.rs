@@ -10,7 +10,7 @@
 /// https://github.com/paritytech/substrate/blob/master/frame/example/src/lib.rs
 
 use frame_support::{decl_module, decl_storage, decl_event, dispatch, weights::{DispatchClass, Weight, WeighData, ClassifyDispatch, PaysFee}};
-use frame_support::traits::Currency;
+use frame_support::traits::{Currency, Imbalance};
 use frame_system::{self as system, ensure_signed};
 
 #[cfg(test)]
@@ -115,10 +115,18 @@ decl_module! {
         pub fn give_me_money(origin, amount: BalanceOf<T>) -> dispatch::DispatchResult {
           	let who = ensure_signed(origin)?;
 
+            // issue the desired amount
           	T::Currency::issue(amount);
-            T::Currency::deposit_creating(&who, amount);
 
-            Self::deposit_event(RawEvent::FreeMoneyGiven(who, amount));
+            // endow own account with the issued amount
+            if T::Currency::deposit_creating(&who, amount).peek() != amount {
+                // undo the issuance if the account was not endowed with the desired amount
+                T::Currency::burn(amount);
+            } else {
+                // report success if everything went well
+                Self::deposit_event(RawEvent::FreeMoneyGiven(who, amount));
+            }
+
             Ok(())
         }
 	}
