@@ -49,13 +49,15 @@ decl_event!(
 	pub enum Event<T>
 	where
 	    Balance = BalanceOf<T>,
-	    <T as system::Trait>::AccountId,
+	    AccountId = <T as system::Trait>::AccountId,
 	{
 		/// Just a dummy event.
 		/// Event `Something` is declared with a parameter of the type `u32` and `AccountId`
 		/// To emit this event, we call the deposit function, from our runtime functions
 		SomethingStored(u32, AccountId),
+		/// Some money was issued by `AccountId`
 		MoneyIssued(AccountId, Balance),
+		/// Some money was issued by `AccountId` and it was added to its balance
 		FreeMoneyGiven(AccountId, Balance),
 	}
 );
