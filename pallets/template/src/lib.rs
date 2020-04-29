@@ -9,7 +9,7 @@
 /// For more guidance on Substrate FRAME, see the example pallet
 /// https://github.com/paritytech/substrate/blob/master/frame/example/src/lib.rs
 
-use frame_support::{decl_module, decl_storage, decl_event, dispatch};
+use frame_support::{decl_module, decl_storage, decl_event, dispatch, weights::{DispatchClass, Weight, WeighData, ClassifyDispatch, PaysFee}};
 use frame_support::traits::Currency;
 use frame_system::{self as system, ensure_signed};
 
@@ -62,6 +62,26 @@ decl_event!(
 	}
 );
 
+pub struct FreeInitialTx;
+
+impl<T> WeighData<T> for FreeInitialTx {
+	fn weigh_data(&self, _: T) -> Weight {
+	    0
+	}
+}
+
+impl<T> PaysFee<T> for FreeInitialTx {
+	fn pays_fee(&self, _: T) -> bool {
+		false
+	}
+}
+
+impl<T> ClassifyDispatch<T> for FreeInitialTx {
+	fn classify_dispatch(&self, _: T) -> DispatchClass {
+		Default::default()
+	}
+}
+
 // The pallet's dispatchable functions.
 decl_module! {
 	/// The module declaration.
@@ -91,7 +111,7 @@ decl_module! {
 		    Ok(())
 		}
 
-		#[weight = frame_support::weights::SimpleDispatchInfo::FixedNormal(0)]
+		#[weight = FreeInitialTx]
         pub fn give_me_money(origin, amount: BalanceOf<T>) -> dispatch::DispatchResult {
           	let who = ensure_signed(origin)?;
 
