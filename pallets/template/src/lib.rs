@@ -89,7 +89,7 @@ decl_module! {
 		    Ok(())
 		}
 
-		#[weight = frame_support::weights::SimpleDispatchInfo::default()]
+		#[weight = frame_support::weights::SimpleDispatchInfo::FixedNormal(0)]
         pub fn give_me_money(origin, amount: BalanceOf<T>) -> dispatch::DispatchResult {
           	let who = ensure_signed(origin)?;
 
