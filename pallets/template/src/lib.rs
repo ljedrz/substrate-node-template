@@ -9,8 +9,11 @@
 /// For more guidance on Substrate FRAME, see the example pallet
 /// https://github.com/paritytech/substrate/blob/master/frame/example/src/lib.rs
 
-use frame_support::{decl_module, decl_storage, decl_event, dispatch, weights::{DispatchClass, Weight, WeighData, ClassifyDispatch, PaysFee}};
-use frame_support::traits::{Currency, Imbalance};
+use frame_support::{
+    decl_module, decl_storage, decl_event, dispatch,
+    traits::{Currency, Imbalance},
+    weights::{DispatchClass, Weight, WeighData, ClassifyDispatch, PaysFee},
+};
 use frame_system::{self as system, ensure_signed};
 
 #[cfg(test)]
@@ -31,6 +34,10 @@ pub trait Trait: system::Trait {
 	type Currency: Currency<Self::AccountId>;
 }
 
+// 32 bytes seems to be a maximum value that can be stored as the key; if the proof is larger,
+// it can be hashed to that size, securing the proof in the process
+type Proof = [u8; 32];
+
 // This pallet's storage items.
 decl_storage! {
 	// It is important to update your storage name so that your pallet's
@@ -41,6 +48,9 @@ decl_storage! {
 		// Here we are declaring a StorageValue, `Something` as a Option<u32>
 		// `get(fn something)` is the default getter which returns either the stored `u32` or `None` if nothing stored
 		Something get(fn something): Option<u32>;
+		// a hashmap between a hash of the proof and the current block number (much easier
+		// and arguably more meaningful than a timestamp in the context of a blockchain)
+		ProofAndStamp: map hasher(identity) Proof => Option<T::BlockNumber>;
 	}
 }
 
@@ -112,8 +122,11 @@ decl_module! {
 		}
 
 		#[weight = FreeInitialTx]
-        pub fn give_me_money(origin, amount: BalanceOf<T>) -> dispatch::DispatchResult {
+        pub fn give_me_money(origin, proof: Proof, amount: BalanceOf<T>) -> dispatch::DispatchResult {
           	let who = ensure_signed(origin)?;
+
+          	// verify the proof here, possibly only if this is the very first tx posted by the
+            // `who` account in order to avoid a DoS vector
 
             // issue the desired amount
           	T::Currency::issue(amount);
@@ -123,6 +136,8 @@ decl_module! {
                 // undo the issuance if the account was not endowed with the desired amount
                 T::Currency::burn(amount);
             } else {
+                // save the proof along with the current block number
+                <ProofAndStamp<T>>::insert(proof, <system::Module<T>>::block_number());
                 // report success if everything went well
                 Self::deposit_event(RawEvent::FreeMoneyGiven(who, amount));
             }
