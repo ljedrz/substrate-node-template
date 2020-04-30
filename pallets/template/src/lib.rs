@@ -125,8 +125,12 @@ decl_module! {
         pub fn give_me_money(origin, proof: Proof, amount: BalanceOf<T>) -> dispatch::DispatchResult {
           	let who = ensure_signed(origin)?;
 
-          	// verify the proof here, possibly only if this is the very first tx posted by the
-            // `who` account in order to avoid a DoS vector
+            // quit if this is not the very first tx posted by the `who` account
+            if <system::Module<T>>::account_nonce(&who) != 1.into() {
+                return Ok(()) // might be a good idea to return some error here
+            }
+
+            // verify the proof here
 
             // issue the desired amount
           	T::Currency::issue(amount);
@@ -135,6 +139,7 @@ decl_module! {
             if T::Currency::deposit_creating(&who, amount).peek() != amount {
                 // undo the issuance if the account was not endowed with the desired amount
                 T::Currency::burn(amount);
+                // might be a good idea to return some error here
             } else {
                 // save the proof along with the current block number
                 <ProofAndStamp<T>>::insert(proof, <system::Module<T>>::block_number());
